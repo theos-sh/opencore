@@ -18,22 +18,24 @@ jobs:
   build-linux-clangdwarf:
     name: Linux CLANGDWARF
     runs-on: ubuntu-latest
-    env:
-      TOOLCHAINS: CLANGDWARF
     steps:
       - uses: actions/checkout@v4
+      - name: Install Build Dependencies
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19 all
+          sudo apt install nasm iasl git
+      - name: Build OpenCore
+        run: |
+          export PATH=/usr/lib/llvm-19/bin:$PATH
+          git clone --recursive --depth=1 https://github.com/tianocore/edk2
+          git clone --recursive --depth=1 https://github.com/tianocore/edk2-platforms
+          cd edk2
+          make -C BaseTools -j$(nproc)
+          source edksetup.sh
+          cd -
+          export CLANG_BIN=/usr/lib/llvm-19/bin/
+          export PACKAGES_PATH=$PWD:$PWD/edk2:$PWD/edk2-platforms/Features:$PWD/../
+          build -p OpenCorePkg.dsc -a IA32 -a X64 -a AARCH64 -t CLANGDWARF -b RELEASE
 
-      - name: Use Docker in rootless mode.
-        uses: ScribeMD/rootless-docker@0.2.2
-
-      - name: ./build_duet.tool
-        run: docker compose run build-duet
-
-      - name: ./build_oc.tool
-        run: docker compose run build-oc
-
-      - name: Upload o Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Linux CLANGDWARF Artifacts
-          path: Binaries/*.zip
