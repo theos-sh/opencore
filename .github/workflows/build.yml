@@ -1,7 +1,6 @@
 name: Build
 
 on:
-  push:
   pull_request:
   workflow_dispatch:
   release:
@@ -29,7 +28,7 @@ jobs:
       - name: Build OpenCore
         run: |
           export PATH=/usr/lib/llvm-19/bin:$PATH
-          git clone --recursive --depth=1 https://github.com/tianocore/edk2
+          git clone --recursive --depth=1 https://github.com/acidanthera/audk edk2
           git clone --recursive --depth=1 https://github.com/tianocore/edk2-platforms
           cd edk2
           make -C BaseTools -j$(nproc)
